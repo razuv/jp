@@ -26,3 +26,6 @@ const campaignCollect=collectCard;collectCard=function(id,button){campaignCollec
 const finalBoss=openBoss;openBoss=function(){if(!screenStops().every(s=>hasCityCard(s[0]))){toast('Финальный бой откроется после выбора карт во всех городах маршрута');return;}finalBoss();};
 
 for(const stop of screenStops()){if(hasCityCard(stop[0])&&!state.citySigils.includes(stop[0]))state.citySigils.push(stop[0]);}persist();updateCityPower();
+
+// Keep photo attribution accessible in one place, without labels on the pictures.
+$('#app').insertAdjacentHTML('beforeend','<details id="art-sources"><summary>Авторство</summary><div id="art-source-list"></div></details>');$('#art-sources').addEventListener('toggle',()=>{if(!$('#art-sources').open)return;const list=$('#art-source-list');list.innerHTML='';const seen=new Set();document.querySelectorAll('#snapshot-source,#photo-credit a,.card-credit,.asset-credit').forEach(a=>{if(!a.href||seen.has(a.href))return;seen.add(a.href);const link=a.cloneNode(true);link.hidden=false;link.className='';list.append(link);});});
