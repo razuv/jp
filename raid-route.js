@@ -1,0 +1,10 @@
+'use strict';
+const RaidRoute=(()=>{
+function distance(a,b){const rad=Math.PI/180,p=(b[1]-a[1])*rad,q=(b[0]-a[0])*rad;return 6371*2*Math.asin(Math.min(1,Math.sqrt(Math.sin(p/2)**2+Math.cos(a[1]*rad)*Math.cos(b[1]*rad)*Math.sin(q/2)**2)));}
+function build(start,end,heroes,points){if(!points[start]||!points[end])throw Error('Неизвестная точка маршрута.');const stops=[...new Set(heroes.map(h=>h.city))].filter(c=>c!==start&&c!==end&&points[c]);let best=[],length=Infinity;function search(order,left){if(!left.length){const route=[start,...order,end];const km=route.slice(1).reduce((n,c,i)=>n+distance(points[route[i]],points[c]),0);if(km<length){length=km;best=order;}return;}for(const c of left)search([...order,c],left.filter(x=>x!==c));}search([],stops);const journey=[start,...best];if(end!==start)journey.push(end);return {path:journey,end,roundTrip:start===end,km:Math.round(length)};}
+function display(plan){return plan.path.at(-1)===plan.end?plan.path:[...plan.path,plan.end];}
+function scenic(start,heroes,points,exit=null,interests=[]){const lat=points[start]?.[1]||35;let core;if(lat>39)core=['hakodate','aomori','sendai','tokyo','kawaguchiko'];else if(start==='tokyo'||start==='kawaguchiko')core=['kawaguchiko','nagano','kanazawa','kyoto'];else if(['nagano','kanazawa'].includes(start))core=['kanazawa','kawaguchiko','tokyo','sendai','sapporo'];else core=['kyoto','kawaguchiko','tokyo','sendai','hakodate','sapporo'];if(heroes.some(h=>h.id?.endsWith(':1'))&&!core.includes('kanazawa'))core.splice(1,0,'kanazawa');core=core.filter(c=>points[c]&&c!==start);if(interests.includes('temples')&&['osaka','kyoto','nara'].includes(start)&&points.nara&&!core.includes('nara')&&start!=='nara')core.unshift('nara');if(interests.includes('onsen')&&points.nagano&&!core.includes('nagano')&&start!=='nagano')core.splice(1,0,'nagano');const end=exit&&points[exit]?exit:core.at(-1)||start;return build(start,end,[...heroes,...core.map(city=>({city}))],points);}
+
+return {build,display,distance,scenic};
+})();
+if(typeof module!=='undefined')module.exports=RaidRoute;

@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict'),Q=require('../raid-route.js'),R=require('../raid-engine.js'),H=require('../raid-champions.js'),S=require('../raid-hero-sites.js');
+const points={osaka:[135.5,34.7],kyoto:[135.76,35],tokyo:[139.76,35.68],sapporo:[141.35,43.06],sendai:[140.88,38.26]};
+let p=Q.build('osaka','tokyo',[{city:'kyoto'},{city:'sapporo'},{city:'kyoto'}],points);assert.equal(p.path[0],'osaka');assert.equal(p.path.at(-1),'tokyo');assert(p.path.includes('kyoto'));assert(p.path.includes('sapporo'));assert.equal(new Set(p.path).size,p.path.length);
+p=Q.build('sapporo','osaka',[{city:'tokyo'},{city:'kyoto'},{city:'sendai'}],points);assert.equal(p.path[0],'sapporo');assert.equal(p.path.at(-1),'osaka');assert.equal(p.path.filter(c=>c==='tokyo').length,1);
+p=Q.build('osaka','osaka',[{city:'kyoto'},{city:'sapporo'}],points);assert.deepEqual(new Set(p.path),new Set(['osaka','kyoto','sapporo']));assert.equal(Q.display(p).at(-1),'osaka');assert.equal(p.path.filter(c=>c==='osaka').length,1);assert(p.roundTrip);
+assert.deepEqual(Q.build('tokyo','tokyo',[{city:'tokyo'}],points).path,['tokyo']);
+S.install(R);for(const city of Object.keys(R.cities)){const heroes=H.choices(city);for(const team of [[heroes[0]],[heroes[1]],heroes]){const offered=S.offer(city,team,R);assert.equal(offered.length,5);assert.equal(new Set(offered.map(c=>c.wiki)).size,5);assert(offered.every(c=>c.city===city));for(const h of team)assert(offered.some(c=>c.wiki===S.focus(h,R).wiki));const saved=JSON.parse(JSON.stringify(offered.slice(0,3).map(c=>c.id)));assert(R.legalDraft(city,saved));}}
+let b=R.battle(['osaka-0','osaka-1','osaka-3'],'osaka',0,['osaka','kyoto','sendai'],17,['osaka-0','osaka-1','osaka-2','osaka-3','osaka-4']);assert.equal(b.maxHP,51);const n=b.hand.length;R.play(b,b.hand[0].uid);assert.equal(b.hand.length,n);assert.deepEqual(b.powers,['osaka','kyoto','sendai']);const legacy=JSON.parse(JSON.stringify(b));R.end(b);R.end(legacy);assert.deepEqual(b,legacy);
+b=R.battle(['osaka-0','osaka-1','osaka-3'],'osaka',0,['sendai','sendai'],17);assert.equal(b.maxHP,57);
+console.log('Flight endpoints, reverse and round trips, hero-city coverage, five unique local hero places, party buffs and save/resume passed.');
+
+points.kawaguchiko=[138.77,35.5];points.kanazawa=[136.65,36.56];points.nagano=[138.18,36.65];points.hakodate=[140.73,41.77];points.aomori=[140.74,40.83];
+for(const start of ['tokyo','osaka','sapporo']){const scenic=Q.scenic(start,[{city:start,id:start+':1'}],points,'tokyo',['walk']);assert(scenic.path.includes('kawaguchiko'));assert.equal(scenic.end,'tokyo');assert.equal(scenic.path[0],start);assert.equal(new Set(scenic.path).size,scenic.path.length);}
