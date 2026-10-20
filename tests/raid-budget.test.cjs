@@ -20,3 +20,6 @@ assert(B.relief({...B.defaults,target:300000},[win]).some(o=>o.id==='caps'));
 assert(B.relief({...B.defaults,target:300000},[win]).some(o=>o.id==='local'));
 assert.deepEqual(B.relief(B.defaults,[win]),[]);
 console.log('Respite: all proposed conditions fit the unchanged budget; duration, spending caps and local route passed.');
+
+// Entered budget is cash available on arrival; old implicit reserves are removed.
+const cash=B.arrival({...B.defaults,target:500000});assert.equal(B.estimate(cash,[],[]).remaining,500000);assert.equal(B.estimate(cash,[],[{key:'card',costPerPerson:350}]).remaining,499300);assert.deepEqual(B.arrival(JSON.parse(JSON.stringify(cash))),cash);console.log('Arrival cash: 500,000 yen starts at 500,000; only explicit cards/events are deducted.');
